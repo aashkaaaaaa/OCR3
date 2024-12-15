@@ -1,0 +1,8 @@
+[build]
+  functions = "functions"
+  publish = "public"
+
+[[redirects]]
+  from = "/capture"
+  to = "/.netlify/functions/app/capture"
+  status = 200
