@@ -1,7 +1,6 @@
 Flask==2.2.3
-netlify==0.3.0  # This is a Netlify SDK that helps deploy Flask on serverless
-pandas==2.0.3
-opencv-python-headless==4.8.0.76
 easyocr==1.7.0
+opencv-python-headless==4.8.0.76
+pandas==2.0.3
 numpy==1.24.3
 rapidfuzz==2.13.3
