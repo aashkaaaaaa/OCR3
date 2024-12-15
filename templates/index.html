@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Image for OCR</title>
+</head>
+<body>
+    <h1>Capture Image for OCR</h1>
+    <video id="videoElement" width="640" height="480" autoplay></video>
+    <canvas id="canvasElement" width="640" height="480" style="display:none;"></canvas>
+    <button onclick="captureImage()">Capture</button>
+
+    <h2>OCR Result</h2>
+    <p id="ocrResult">Waiting for OCR...</p>
+
+    <h2>Matched Products</h2>
+    <ul id="matchCounts"></ul>
+
+    <h2>Processed Image</h2>
+    <div id="processedImageContainer"></div>
+
+    <script>
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvasElement');
+        const context = canvas.getContext('2d');
+
+        // Initialize webcam
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('Unable to access the webcam. Please check permissions.');
+            }
+        }
+
+        function captureImage() {
+            // Draw the current video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // Send the captured image to the backend
+            fetch('/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the OCR result
+                document.getElementById('ocrResult').textContent = data.result;
+
+                // Update the matched products list
+                const matchCountsList = document.getElementById('matchCounts');
+                matchCountsList.innerHTML = ''; // Clear any previous matches
+                for (const [product, count] of Object.entries(data.match_counts)) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${product}: ${count}`;
+                    matchCountsList.appendChild(listItem);
+                }
+
+                // Display the processed image
+                const processedImageContainer = document.getElementById('processedImageContainer');
+                processedImageContainer.innerHTML = ''; // Clear previous image
+                const imgElement = document.createElement('img');
+                imgElement.src = `/static/results/${data.image_url}`;
+                imgElement.width = 640; // Adjust size as needed
+                processedImageContainer.appendChild(imgElement);
+            })
+            .catch(error => {
+                console.error('Error processing image:', error);
+                alert('An error occurred while processing the image.');
+            });
+        }
+
+        // Initialize the webcam when the page loads
+        initCamera();
+    </script>
+</body>
+</html>
